@@ -5,11 +5,10 @@
 //  Created by Ihor Manzii on 25.03.2026.
 //
 
-
 import SwiftUI
 
 struct MenuBarLabelView: View {
-    
+
     let monitor: NetworkBandwidthMonitor
 
     var body: some View {

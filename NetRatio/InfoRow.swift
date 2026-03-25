@@ -5,7 +5,6 @@
 //  Created by Ihor Manzii on 25.03.2026.
 //
 
-
 import SwiftUI
 
 struct InfoRow: View {

@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct NetRatioApp: App {
-    
+
     @State private var monitor = NetworkBandwidthMonitor()
 
     var body: some Scene {

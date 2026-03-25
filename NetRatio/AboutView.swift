@@ -5,7 +5,6 @@
 //  Created by Ihor Manzii on 25.03.2026.
 //
 
-
 import SwiftUI
 
 struct AboutView: View {
@@ -29,22 +28,30 @@ struct AboutView: View {
             }
 
             Divider()
-            
+
             InfoRow(title: "Version", value: VersionUtils.getAppVersion())
 
             InfoRow(title: "Author", value: "Ihor Manzii")
-            
+
             VStack(alignment: .leading, spacing: 6) {
                 Text("GitHub")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Link("GitHub", destination: URL(string: "https://github.com/ihormanzii/NetRatio")!)
-                    .font(.body.monospaced())
+                Link(
+                    "GitHub",
+                    destination: URL(
+                        string: "https://github.com/ihormanzii/NetRatio"
+                    )!
+                )
+                .font(.body.monospaced())
             }
 
             InfoRow(title: "License", value: "MIT License")
-            InfoRow(title: "Copyright", value: "Copyright © 2026 Ihor Manzii. All rights reserved.")
+            InfoRow(
+                title: "Copyright",
+                value: "Copyright © 2026 Ihor Manzii. All rights reserved."
+            )
 
             HStack {
                 Spacer()

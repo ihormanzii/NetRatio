@@ -8,10 +8,12 @@
 import Foundation
 
 enum VersionUtils {
-    
+
     static func getAppVersion(bundle: Bundle = .main) -> String {
-        let shortVersion = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "undefined"
-        
+        let shortVersion =
+            bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+            as? String ?? "undefined"
+
         return "\(shortVersion)"
     }
 }
