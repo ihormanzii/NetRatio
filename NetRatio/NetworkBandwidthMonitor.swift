@@ -81,7 +81,7 @@ final class NetworkBandwidthMonitor {
         uploadRate = 0
         interfaceOptions = buildInterfaceOptions(
             activeInterfaceNames: activeInterfaceNames,
-            displayNamesByBSDName: metadataProvider.displayNamesByBSDName()
+            configuredServices: metadataProvider.configuredServices()
         )
     }
 
@@ -94,13 +94,17 @@ final class NetworkBandwidthMonitor {
             return
         }
 
+        let configuredServices = metadataProvider.configuredServices()
+        let configuredInterfaceNames = Set(configuredServices.map(\.bsdName))
+        let filteredSnapshot = snapshot.filtered(to: configuredInterfaceNames)
+
         interfaceOptions = buildInterfaceOptions(
-            activeInterfaceNames: snapshot.sortedInterfaceNames,
-            displayNamesByBSDName: metadataProvider.displayNamesByBSDName()
+            activeInterfaceNames: filteredSnapshot.sortedInterfaceNames,
+            configuredServices: configuredServices
         )
 
         defer {
-            previousSnapshot = snapshot
+            previousSnapshot = filteredSnapshot
         }
 
         guard let previousSnapshot else {
@@ -109,14 +113,14 @@ final class NetworkBandwidthMonitor {
             return
         }
 
-        let elapsed = snapshot.timestamp.timeIntervalSince(
+        let elapsed = filteredSnapshot.timestamp.timeIntervalSince(
             previousSnapshot.timestamp
         )
         guard elapsed > 0 else {
             return
         }
 
-        let counters = snapshot.delta(
+        let counters = filteredSnapshot.delta(
             since: previousSnapshot,
             selection: selectedInterface
         )
@@ -153,43 +157,46 @@ final class NetworkBandwidthMonitor {
 
     private func buildInterfaceOptions(
         activeInterfaceNames: [String],
-        displayNamesByBSDName: [String: String]
+        configuredServices: [ConfiguredNetworkService]
     ) -> [NetworkInterfaceOption] {
-        let activeOptions = activeInterfaceNames
-            .map { bsdName in
-                NetworkInterfaceOption(
-                    bsdName: bsdName,
-                    displayName: displayNamesByBSDName[bsdName],
-                    isAvailable: true
-                )
-            }
-            .sorted { lhs, rhs in
-                let lhsKey = lhs.displayName ?? lhs.bsdName
-                let rhsKey = rhs.displayName ?? rhs.bsdName
-                let nameOrder = lhsKey.localizedStandardCompare(rhsKey)
+        let activeSet = Set(activeInterfaceNames)
 
-                guard nameOrder == .orderedSame else {
-                    return nameOrder == .orderedAscending
-                }
-
-                return lhs.bsdName.localizedStandardCompare(rhs.bsdName)
-                    == .orderedAscending
+        let activeOptions: [NetworkInterfaceOption] = configuredServices.compactMap {
+            service -> NetworkInterfaceOption? in
+            guard activeSet.contains(service.bsdName) else {
+                return nil
             }
+
+            return NetworkInterfaceOption(
+                bsdName: service.bsdName,
+                displayName: service.displayName,
+                isAvailable: true
+            )
+        }
 
         guard case let .interface(bsdName) = selectedInterface,
-            activeInterfaceNames.contains(bsdName) == false
+            activeSet.contains(bsdName) == false
         else {
             return activeOptions
         }
 
+        let staleDisplayName = configuredServices.first {
+            $0.bsdName == bsdName
+        }?.displayName
+
         return activeOptions + [
             NetworkInterfaceOption(
                 bsdName: bsdName,
-                displayName: displayNamesByBSDName[bsdName],
+                displayName: staleDisplayName,
                 isAvailable: false
             )
         ]
     }
+}
+
+struct ConfiguredNetworkService: Equatable {
+    let bsdName: String
+    let displayName: String
 }
 
 enum NetworkInterfaceSelection: Hashable {
@@ -232,7 +239,7 @@ protocol NetworkSnapshotSource {
 }
 
 protocol NetworkInterfaceMetadataProviding {
-    func displayNamesByBSDName() -> [String: String]
+    func configuredServices() -> [ConfiguredNetworkService]
 }
 
 struct NetworkSnapshot: Equatable {
@@ -244,6 +251,15 @@ struct NetworkSnapshot: Equatable {
         countersByInterface.keys.sorted { lhs, rhs in
             lhs.localizedStandardCompare(rhs) == .orderedAscending
         }
+    }
+
+    func filtered(to allowedInterfaceNames: Set<String>) -> NetworkSnapshot {
+        NetworkSnapshot(
+            timestamp: timestamp,
+            countersByInterface: countersByInterface.filter { key, _ in
+                allowedInterfaceNames.contains(key)
+            }
+        )
     }
 
     func delta(
@@ -358,20 +374,39 @@ struct LiveNetworkSnapshotSource: NetworkSnapshotSource {
 }
 
 struct LiveNetworkInterfaceMetadataProvider: NetworkInterfaceMetadataProviding {
-    func displayNamesByBSDName() -> [String: String] {
-        guard let interfaces = SCNetworkInterfaceCopyAll() as? [SCNetworkInterface]
+    func configuredServices() -> [ConfiguredNetworkService] {
+        guard
+            let preferences = SCPreferencesCreate(
+                nil,
+                "NetRatio" as CFString,
+                nil
+            ),
+            let currentSet = SCNetworkSetCopyCurrent(preferences),
+            let services = SCNetworkSetCopyServices(currentSet) as? [SCNetworkService]
         else {
-            return [:]
+            return []
         }
 
-        return interfaces.reduce(into: [:]) { partialResult, interface in
-            guard let bsdName = SCNetworkInterfaceGetBSDName(interface) as String?
+        var seenBSDNames = Set<String>()
+
+        return services.compactMap { service in
+            guard SCNetworkServiceGetEnabled(service),
+                let interface = SCNetworkServiceGetInterface(service),
+                let bsdName = SCNetworkInterfaceGetBSDName(interface) as String?,
+                seenBSDNames.insert(bsdName).inserted
             else {
-                return
+                return nil
             }
 
-            partialResult[bsdName] =
-                SCNetworkInterfaceGetLocalizedDisplayName(interface) as String?
+            let displayName =
+                (SCNetworkServiceGetName(service) as String?)
+                ?? (SCNetworkInterfaceGetLocalizedDisplayName(interface) as String?)
+                ?? bsdName
+
+            return ConfiguredNetworkService(
+                bsdName: bsdName,
+                displayName: displayName
+            )
         }
     }
 }

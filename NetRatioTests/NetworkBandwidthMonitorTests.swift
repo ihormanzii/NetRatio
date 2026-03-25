@@ -4,12 +4,13 @@ import XCTest
 @MainActor
 final class NetworkBandwidthMonitorTests: XCTestCase {
 
-    func testAggregateModeSumsPositiveDeltasAcrossInterfaces() {
+    func testAggregateModeUsesOnlyConfiguredServicesAndServiceOrder() {
         let source = StubNetworkSnapshotSource(
             snapshots: [
                 makeSnapshot(
                     second: 0,
                     counters: [
+                        "awdl0": .init(receivedBytes: 500, sentBytes: 200),
                         "en0": .init(receivedBytes: 100, sentBytes: 40),
                         "en1": .init(receivedBytes: 200, sentBytes: 80),
                     ]
@@ -17,6 +18,7 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
                 makeSnapshot(
                     second: 1,
                     counters: [
+                        "awdl0": .init(receivedBytes: 650, sentBytes: 260),
                         "en0": .init(receivedBytes: 160, sentBytes: 65),
                         "en1": .init(receivedBytes: 260, sentBytes: 95),
                     ]
@@ -26,7 +28,12 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
 
         let monitor = NetworkBandwidthMonitor(
             snapshotSource: source,
-            metadataProvider: StubInterfaceMetadataProvider(names: [:]),
+            metadataProvider: StubInterfaceMetadataProvider(
+                services: [
+                    .init(bsdName: "en1", displayName: "USB LAN"),
+                    .init(bsdName: "en0", displayName: "Wi-Fi"),
+                ]
+            ),
             startImmediately: false
         )
 
@@ -35,6 +42,13 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
 
         XCTAssertEqual(monitor.downloadRate, 120)
         XCTAssertEqual(monitor.uploadRate, 40)
+        XCTAssertEqual(
+            monitor.interfaceOptions.map(\.pickerLabel),
+            [
+                "USB LAN (en1)",
+                "Wi-Fi (en0)",
+            ]
+        )
     }
 
     func testInterfaceSelectionUsesOnlyChosenInterface() {
@@ -59,7 +73,12 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
 
         let monitor = NetworkBandwidthMonitor(
             snapshotSource: source,
-            metadataProvider: StubInterfaceMetadataProvider(names: [:]),
+            metadataProvider: StubInterfaceMetadataProvider(
+                services: [
+                    .init(bsdName: "en0", displayName: "Wi-Fi"),
+                    .init(bsdName: "en1", displayName: "USB LAN"),
+                ]
+            ),
             startImmediately: false
         )
 
@@ -107,7 +126,12 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
 
         let monitor = NetworkBandwidthMonitor(
             snapshotSource: source,
-            metadataProvider: StubInterfaceMetadataProvider(names: [:]),
+            metadataProvider: StubInterfaceMetadataProvider(
+                services: [
+                    .init(bsdName: "en0", displayName: "Wi-Fi"),
+                    .init(bsdName: "en1", displayName: "USB LAN"),
+                ]
+            ),
             startImmediately: false
         )
 
@@ -151,9 +175,9 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
         let monitor = NetworkBandwidthMonitor(
             snapshotSource: source,
             metadataProvider: StubInterfaceMetadataProvider(
-                names: [
-                    "en0": "Wi-Fi",
-                    "en1": "USB LAN",
+                services: [
+                    .init(bsdName: "en0", displayName: "Wi-Fi"),
+                    .init(bsdName: "en1", displayName: "USB LAN"),
                 ]
             ),
             startImmediately: false
@@ -186,14 +210,14 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
         )
     }
 
-    func testInterfaceOptionsFallbackToBSDNameWhenDisplayNameMissing() {
+    func testServiceNamesFallbackToBSDWithoutDuplicateSuffix() {
         let source = StubNetworkSnapshotSource(
             snapshots: [
                 makeSnapshot(
                     second: 0,
                     counters: [
-                        "en1": .init(receivedBytes: 200, sentBytes: 80),
                         "en0": .init(receivedBytes: 100, sentBytes: 40),
+                        "en1": .init(receivedBytes: 200, sentBytes: 80),
                     ]
                 ),
             ]
@@ -202,8 +226,9 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
         let monitor = NetworkBandwidthMonitor(
             snapshotSource: source,
             metadataProvider: StubInterfaceMetadataProvider(
-                names: [
-                    "en1": "USB LAN",
+                services: [
+                    .init(bsdName: "en1", displayName: "USB LAN"),
+                    .init(bsdName: "en0", displayName: "en0"),
                 ]
             ),
             startImmediately: false
@@ -214,8 +239,8 @@ final class NetworkBandwidthMonitorTests: XCTestCase {
         XCTAssertEqual(
             monitor.interfaceOptions.map(\.pickerLabel),
             [
-                "en0",
                 "USB LAN (en1)",
+                "en0",
             ]
         )
     }
@@ -251,9 +276,9 @@ private final class StubNetworkSnapshotSource: NetworkSnapshotSource {
 }
 
 private struct StubInterfaceMetadataProvider: NetworkInterfaceMetadataProviding {
-    let names: [String: String]
+    let services: [ConfiguredNetworkService]
 
-    func displayNamesByBSDName() -> [String: String] {
-        names
+    func configuredServices() -> [ConfiguredNetworkService] {
+        services
     }
 }
