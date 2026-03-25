@@ -9,6 +9,7 @@ The app runs as a menu bar utility instead of a standard Dock app. Its menu bar 
 ## Features
 
 - Real-time download and upload monitoring
+- Interface picker with `All Interfaces` and per-interface monitoring
 - Menu bar label with live bandwidth values
 - Compact popover with current network stats
 - Dock-less utility app behavior on macOS
@@ -46,6 +47,8 @@ After launch, NetRatio appears in the macOS menu bar.
 ## Notes
 
 - The app measures active non-loopback network interfaces.
+- The app starts in `All Interfaces`, and you can switch to a single active interface from the menu popup.
+- Interface names are shown as `Friendly Name (bsdName)` when macOS exposes both values.
 - Virtual interfaces such as VPNs may affect the displayed totals if they carry traffic.
 - The update interval is currently one second.
 
