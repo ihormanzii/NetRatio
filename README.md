@@ -3,7 +3,7 @@
 NetRatio is a lightweight macOS menu bar application that shows current network download and upload bandwidth in real time.
 
 The app runs as a menu bar utility instead of a standard Dock app. Its menu bar label updates continuously with live traffic rates, and clicking it opens a compact panel with current download and upload speeds.
-
+![screenshot.png](files/screenshot.png)
 ## Features
 
 - Real-time download and upload monitoring
