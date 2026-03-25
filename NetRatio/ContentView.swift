@@ -32,14 +32,17 @@ struct ContentView: View {
 
             Divider()
 
-            Button("About NetRatio") {
-                isShowingAbout = true
+            HStack(spacing: 12) {
+                Button("About") {
+                    isShowingAbout = true
+                }
+
+                Button("Quit") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .keyboardShortcut("q")
             }
 
-            Button("Quit NetRatio") {
-                NSApplication.shared.terminate(nil)
-            }
-            .keyboardShortcut("q")
         }
         .padding(16)
         .frame(width: 280)
