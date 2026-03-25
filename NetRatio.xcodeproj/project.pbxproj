@@ -6,14 +6,35 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2B0A00112F75000000CB0B76 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B0A00102F75000000CB0B76 /* XCTest.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2B0A00182F75000000CB0B76 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1AFBA9D22F74366B00CB0B76 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1AFBA9D92F74366B00CB0B76;
+			remoteInfo = NetRatio;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		1AFBA9DA2F74366B00CB0B76 /* NetRatio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NetRatio.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B0A000F2F75000000CB0B76 /* NetRatioTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NetRatioTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B0A00102F75000000CB0B76 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1AFBA9DC2F74366B00CB0B76 /* NetRatio */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = NetRatio;
+			sourceTree = "<group>";
+		};
+		2B0A00122F75000000CB0B76 /* NetRatioTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NetRatioTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,14 +47,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2B0A00132F75000000CB0B76 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B0A00112F75000000CB0B76 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1A61B1302F7484E60062F243 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				2B0A00102F75000000CB0B76 /* XCTest.framework */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		1AFBA9D12F74366B00CB0B76 = {
 			isa = PBXGroup;
 			children = (
 				1AFBA9DC2F74366B00CB0B76 /* NetRatio */,
+				2B0A00122F75000000CB0B76 /* NetRatioTests */,
 				1AFBA9DB2F74366B00CB0B76 /* Products */,
+				1A61B1302F7484E60062F243 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -41,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				1AFBA9DA2F74366B00CB0B76 /* NetRatio.app */,
+				2B0A000F2F75000000CB0B76 /* NetRatioTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +110,29 @@
 			productReference = 1AFBA9DA2F74366B00CB0B76 /* NetRatio.app */;
 			productType = "com.apple.product-type.application";
 		};
+		2B0A00172F75000000CB0B76 /* NetRatioTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2B0A001D2F75000000CB0B76 /* Build configuration list for PBXNativeTarget "NetRatioTests" */;
+			buildPhases = (
+				2B0A00152F75000000CB0B76 /* Sources */,
+				2B0A00132F75000000CB0B76 /* Frameworks */,
+				2B0A00142F75000000CB0B76 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2B0A00192F75000000CB0B76 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				2B0A00122F75000000CB0B76 /* NetRatioTests */,
+			);
+			name = NetRatioTests;
+			packageProductDependencies = (
+			);
+			productName = NetRatioTests;
+			productReference = 2B0A000F2F75000000CB0B76 /* NetRatioTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +145,10 @@
 				TargetAttributes = {
 					1AFBA9D92F74366B00CB0B76 = {
 						CreatedOnToolsVersion = 26.4;
+					};
+					2B0A00172F75000000CB0B76 = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 1AFBA9D92F74366B00CB0B76;
 					};
 				};
 			};
@@ -100,12 +167,20 @@
 			projectRoot = "";
 			targets = (
 				1AFBA9D92F74366B00CB0B76 /* NetRatio */,
+				2B0A00172F75000000CB0B76 /* NetRatioTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		1AFBA9D82F74366B00CB0B76 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B0A00142F75000000CB0B76 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +197,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2B0A00152F75000000CB0B76 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2B0A00192F75000000CB0B76 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1AFBA9D92F74366B00CB0B76 /* NetRatio */;
+			targetProxy = 2B0A00182F75000000CB0B76 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1AFBA9E32F74366D00CB0B76 /* Debug */ = {
@@ -252,7 +342,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 927Y4B8X72;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
@@ -277,7 +367,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ihormanzii.NetRatio;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -299,7 +389,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 927Y4B8X72;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
@@ -324,7 +414,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ihormanzii.NetRatio;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -334,6 +424,58 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		2B0A001A2F75000000CB0B76 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 927Y4B8X72;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/../Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ihormanzii.NetRatioTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NetRatio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NetRatio";
+				TEST_TARGET_NAME = NetRatio;
+			};
+			name = Debug;
+		};
+		2B0A001B2F75000000CB0B76 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 927Y4B8X72;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/../Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ihormanzii.NetRatioTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NetRatio.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NetRatio";
+				TEST_TARGET_NAME = NetRatio;
 			};
 			name = Release;
 		};
@@ -354,6 +496,15 @@
 			buildConfigurations = (
 				1AFBA9E62F74366D00CB0B76 /* Debug */,
 				1AFBA9E72F74366D00CB0B76 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2B0A001D2F75000000CB0B76 /* Build configuration list for PBXNativeTarget "NetRatioTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B0A001A2F75000000CB0B76 /* Debug */,
+				2B0A001B2F75000000CB0B76 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
