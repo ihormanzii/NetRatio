@@ -2,10 +2,6 @@
 .DS_Store
 
 xcuserdata/
-xcshareddata
-
-NetRatio.xcodeproj/xcuserdata
-NetRatio.xcodeproj/xcshareddata
 
 ## App packaging
 *.ipa
