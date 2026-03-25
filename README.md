@@ -52,7 +52,3 @@ After launch, NetRatio appears in the macOS menu bar.
 - Swift
 - SwiftUI
 - AppKit/macOS system networking counters
-
-## License
-
-No license file is currently included in this repository.
