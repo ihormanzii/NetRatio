@@ -1,29 +1,29 @@
 # NetRatio
 
-NetRatio is a lightweight macOS menu bar application that shows current network download and upload bandwidth in real time.
+NetRatio is a lightweight macOS menu bar app that shows current network download and upload bandwidth in real time.
 
-The app runs as a menu bar utility instead of a standard Dock app. Its menu bar label updates continuously with live traffic rates, and clicking it opens a compact panel with current download and upload speeds.
-
+It runs as a menu bar utility instead of a regular Dock app. The menu bar label updates continuously with live transfer rates, and clicking it opens a compact popover with current network stats and an About screen.
 
 ![screenshot.png](files/screenshot.png)
+
 ## Features
 
 - Real-time download and upload monitoring
-- Menu bar label with live bandwidth values
-- Compact popover with current network stats
-- Dock-less utility app behavior on macOS
-- Built with SwiftUI for macOS
+- Live bandwidth values in the macOS menu bar
+- Compact popover UI for current traffic stats
+- About screen with author, version, GitHub link, and copyright/license info
+- Menu bar utility behavior without a standard Dock presence
 
 ## How It Works
 
-NetRatio reads byte counters from active macOS network interfaces and calculates the traffic delta over time to estimate current throughput.
+NetRatio reads byte counters from active macOS network interfaces and calculates the delta over time to estimate the current transfer rate.
 
-It does not generate network traffic on its own. Instead, it measures the system's existing network activity and converts it into human-readable transfer rates.
+It does not generate network traffic on its own. It simply measures existing system traffic and formats it into readable download and upload speeds.
 
 ## Requirements
 
-- macOS >= 24.0
-- Xcode >= 24
+- macOS 15.6+
+- Xcode
 - Apple Silicon or Intel Mac
 
 ## Run in Xcode
@@ -46,11 +46,12 @@ After launch, NetRatio appears in the macOS menu bar.
 ## Notes
 
 - The app measures active non-loopback network interfaces.
-- Virtual interfaces such as VPNs may affect the displayed totals if they carry traffic.
 - The update interval is currently one second.
+- Very low traffic values may appear rounded in the compact menu bar label.
 
 ## Tech Stack
 
 - Swift
 - SwiftUI
-- AppKit/macOS system networking counters
+- Observation
+- macOS networking counters via `getifaddrs`
