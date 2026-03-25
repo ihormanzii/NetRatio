@@ -8,20 +8,15 @@
 import Darwin
 import Foundation
 import Observation
-import SystemConfiguration
 
 @MainActor
 @Observable
 final class NetworkBandwidthMonitor {
 
-    private let updateInterval: Duration
-    private let snapshotSource: any NetworkSnapshotSource
-    private let metadataProvider: any NetworkInterfaceMetadataProviding
+    private let updateInterval: Duration = .seconds(1)
     private var previousSnapshot: NetworkSnapshot?
     private var refreshTask: Task<Void, Never>?
 
-    var selectedInterface: NetworkInterfaceSelection = .all
-    var interfaceOptions: [NetworkInterfaceOption] = []
     var downloadRate: Double = 0
     var uploadRate: Double = 0
 
@@ -41,71 +36,31 @@ final class NetworkBandwidthMonitor {
         formattedCompactRate(uploadRate)
     }
 
-    init(
-        updateInterval: Duration = .seconds(1),
-        snapshotSource: (any NetworkSnapshotSource)? = nil,
-        metadataProvider: (any NetworkInterfaceMetadataProviding)? = nil,
-        startImmediately: Bool = true
-    ) {
-        self.updateInterval = updateInterval
-        self.snapshotSource = snapshotSource ?? LiveNetworkSnapshotSource()
-        self.metadataProvider =
-            metadataProvider ?? LiveNetworkInterfaceMetadataProvider()
-
-        if startImmediately {
-            refreshTask = Task { @MainActor [weak self, updateInterval] in
-                self?.refreshSample()
-
-                while !Task.isCancelled {
-                    try? await Task.sleep(for: updateInterval)
-                    guard let self else {
-                        return
-                    }
-
-                    self.refreshSample()
-                }
-            }
+    init() {
+        refreshTask = Task { [weak self] in
+            await self?.runRefreshLoop()
         }
     }
 
-    func selectInterface(_ selection: NetworkInterfaceSelection) {
-        guard selection != selectedInterface else {
-            return
-        }
-
-        let activeInterfaceNames = previousSnapshot?.sortedInterfaceNames ?? []
-
-        selectedInterface = selection
-        previousSnapshot = nil
-        downloadRate = 0
-        uploadRate = 0
-        interfaceOptions = buildInterfaceOptions(
-            activeInterfaceNames: activeInterfaceNames,
-            displayNamesByBSDName: metadataProvider.displayNamesByBSDName()
-        )
-    }
-
-    func refreshNow() {
+    private func runRefreshLoop() async {
         refreshSample()
+
+        while !Task.isCancelled {
+            try? await Task.sleep(for: updateInterval)
+            refreshSample()
+        }
     }
 
     private func refreshSample() {
-        guard let snapshot = snapshotSource.currentSnapshot() else {
+        guard let snapshot = NetworkSnapshot.current() else {
             return
         }
-
-        interfaceOptions = buildInterfaceOptions(
-            activeInterfaceNames: snapshot.sortedInterfaceNames,
-            displayNamesByBSDName: metadataProvider.displayNamesByBSDName()
-        )
 
         defer {
             previousSnapshot = snapshot
         }
 
         guard let previousSnapshot else {
-            downloadRate = 0
-            uploadRate = 0
             return
         }
 
@@ -116,13 +71,12 @@ final class NetworkBandwidthMonitor {
             return
         }
 
-        let counters = snapshot.delta(
-            since: previousSnapshot,
-            selection: selectedInterface
-        )
+        let downloadedBytes =
+            snapshot.receivedBytes &- previousSnapshot.receivedBytes
+        let uploadedBytes = snapshot.sentBytes &- previousSnapshot.sentBytes
 
-        downloadRate = Double(counters.receivedBytes) / elapsed
-        uploadRate = Double(counters.sentBytes) / elapsed
+        downloadRate = Double(downloadedBytes) / elapsed
+        uploadRate = Double(uploadedBytes) / elapsed
     }
 
     private func formattedRate(_ bytesPerSecond: Double) -> String {
@@ -150,168 +104,15 @@ final class NetworkBandwidthMonitor {
             with: ""
         )
     }
-
-    private func buildInterfaceOptions(
-        activeInterfaceNames: [String],
-        displayNamesByBSDName: [String: String]
-    ) -> [NetworkInterfaceOption] {
-        let activeOptions = activeInterfaceNames
-            .map { bsdName in
-                NetworkInterfaceOption(
-                    bsdName: bsdName,
-                    displayName: displayNamesByBSDName[bsdName],
-                    isAvailable: true
-                )
-            }
-            .sorted { lhs, rhs in
-                let lhsKey = lhs.displayName ?? lhs.bsdName
-                let rhsKey = rhs.displayName ?? rhs.bsdName
-                let nameOrder = lhsKey.localizedStandardCompare(rhsKey)
-
-                guard nameOrder == .orderedSame else {
-                    return nameOrder == .orderedAscending
-                }
-
-                return lhs.bsdName.localizedStandardCompare(rhs.bsdName)
-                    == .orderedAscending
-            }
-
-        guard case let .interface(bsdName) = selectedInterface,
-            activeInterfaceNames.contains(bsdName) == false
-        else {
-            return activeOptions
-        }
-
-        return activeOptions + [
-            NetworkInterfaceOption(
-                bsdName: bsdName,
-                displayName: displayNamesByBSDName[bsdName],
-                isAvailable: false
-            )
-        ]
-    }
 }
 
-enum NetworkInterfaceSelection: Hashable {
-    case all
-    case interface(String)
-}
-
-struct NetworkInterfaceOption: Equatable, Identifiable {
-    let bsdName: String
-    let displayName: String?
-    let isAvailable: Bool
-
-    var id: String {
-        bsdName
-    }
-
-    var label: String {
-        guard let displayName else {
-            return bsdName
-        }
-
-        if displayName == bsdName || displayName.contains("(\(bsdName))") {
-            return displayName
-        }
-
-        return "\(displayName) (\(bsdName))"
-    }
-
-    var pickerLabel: String {
-        guard isAvailable == false else {
-            return label
-        }
-
-        return "\(label) (Unavailable)"
-    }
-}
-
-protocol NetworkSnapshotSource {
-    func currentSnapshot() -> NetworkSnapshot?
-}
-
-protocol NetworkInterfaceMetadataProviding {
-    func displayNamesByBSDName() -> [String: String]
-}
-
-struct NetworkSnapshot: Equatable {
+private struct NetworkSnapshot {
 
     let timestamp: Date
-    let countersByInterface: [String: NetworkInterfaceCounters]
-
-    var sortedInterfaceNames: [String] {
-        countersByInterface.keys.sorted { lhs, rhs in
-            lhs.localizedStandardCompare(rhs) == .orderedAscending
-        }
-    }
-
-    func delta(
-        since previousSnapshot: NetworkSnapshot,
-        selection: NetworkInterfaceSelection
-    ) -> NetworkInterfaceCounters {
-        switch selection {
-        case .all:
-            let interfaceNames = Set(countersByInterface.keys)
-                .union(previousSnapshot.countersByInterface.keys)
-
-            return interfaceNames.reduce(.zero) { partialResult, bsdName in
-                partialResult + countersByInterface[bsdName].delta(
-                    since: previousSnapshot.countersByInterface[bsdName]
-                )
-            }
-        case let .interface(bsdName):
-            return countersByInterface[bsdName].delta(
-                since: previousSnapshot.countersByInterface[bsdName]
-            )
-        }
-    }
-}
-
-struct NetworkInterfaceCounters: Equatable {
     let receivedBytes: UInt64
     let sentBytes: UInt64
 
-    static let zero = NetworkInterfaceCounters(receivedBytes: 0, sentBytes: 0)
-
-    static func + (
-        lhs: NetworkInterfaceCounters,
-        rhs: NetworkInterfaceCounters
-    ) -> NetworkInterfaceCounters {
-        NetworkInterfaceCounters(
-            receivedBytes: lhs.receivedBytes + rhs.receivedBytes,
-            sentBytes: lhs.sentBytes + rhs.sentBytes
-        )
-    }
-}
-
-private extension Optional where Wrapped == NetworkInterfaceCounters {
-    func delta(
-        since previousCounters: NetworkInterfaceCounters?
-    ) -> NetworkInterfaceCounters {
-        guard let currentCounters = self,
-            let previousCounters,
-            currentCounters.receivedBytes >= previousCounters.receivedBytes,
-            currentCounters.sentBytes >= previousCounters.sentBytes
-        else {
-            return .zero
-        }
-
-        return NetworkInterfaceCounters(
-            receivedBytes: currentCounters.receivedBytes
-                - previousCounters.receivedBytes,
-            sentBytes: currentCounters.sentBytes - previousCounters.sentBytes
-        )
-    }
-}
-
-struct LiveNetworkSnapshotSource: NetworkSnapshotSource {
-
     static func current() -> NetworkSnapshot? {
-        LiveNetworkSnapshotSource().currentSnapshot()
-    }
-
-    func currentSnapshot() -> NetworkSnapshot? {
         var interfaceAddress: UnsafeMutablePointer<ifaddrs>?
         guard getifaddrs(&interfaceAddress) == 0,
             let firstAddress = interfaceAddress
@@ -323,7 +124,8 @@ struct LiveNetworkSnapshotSource: NetworkSnapshotSource {
             freeifaddrs(interfaceAddress)
         }
 
-        var countersByInterface: [String: NetworkInterfaceCounters] = [:]
+        var receivedBytes: UInt64 = 0
+        var sentBytes: UInt64 = 0
 
         for pointer in sequence(
             first: firstAddress,
@@ -333,8 +135,6 @@ struct LiveNetworkSnapshotSource: NetworkSnapshotSource {
             let flags = Int32(interface.ifa_flags)
 
             guard
-                let address = interface.ifa_addr,
-                address.pointee.sa_family == UInt8(AF_LINK),
                 (flags & IFF_UP) != 0,
                 (flags & IFF_LOOPBACK) == 0,
                 let data = interface.ifa_data
@@ -342,36 +142,15 @@ struct LiveNetworkSnapshotSource: NetworkSnapshotSource {
                 continue
             }
 
-            let bsdName = String(cString: interface.ifa_name)
             let networkData = data.assumingMemoryBound(to: if_data.self).pointee
-            countersByInterface[bsdName] = NetworkInterfaceCounters(
-                receivedBytes: UInt64(networkData.ifi_ibytes),
-                sentBytes: UInt64(networkData.ifi_obytes)
-            )
+            receivedBytes += UInt64(networkData.ifi_ibytes)
+            sentBytes += UInt64(networkData.ifi_obytes)
         }
 
         return NetworkSnapshot(
             timestamp: Date(),
-            countersByInterface: countersByInterface
+            receivedBytes: receivedBytes,
+            sentBytes: sentBytes
         )
-    }
-}
-
-struct LiveNetworkInterfaceMetadataProvider: NetworkInterfaceMetadataProviding {
-    func displayNamesByBSDName() -> [String: String] {
-        guard let interfaces = SCNetworkInterfaceCopyAll() as? [SCNetworkInterface]
-        else {
-            return [:]
-        }
-
-        return interfaces.reduce(into: [:]) { partialResult, interface in
-            guard let bsdName = SCNetworkInterfaceGetBSDName(interface) as String?
-            else {
-                return
-            }
-
-            partialResult[bsdName] =
-                SCNetworkInterfaceGetLocalizedDisplayName(interface) as String?
-        }
     }
 }
