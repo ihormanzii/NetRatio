@@ -53,14 +53,14 @@ final class NetworkBandwidthMonitor {
 
     private func refreshSample() {
         guard let snapshot = NetworkSnapshot.current() else {
+            downloadRate = 0
+            uploadRate = 0
+            previousSnapshot = nil
             return
         }
 
-        defer {
-            previousSnapshot = snapshot
-        }
-
         guard let previousSnapshot else {
+            self.previousSnapshot = snapshot
             return
         }
 
@@ -71,16 +71,27 @@ final class NetworkBandwidthMonitor {
             return
         }
 
+        guard
+            snapshot.receivedBytes >= previousSnapshot.receivedBytes,
+            snapshot.sentBytes >= previousSnapshot.sentBytes
+        else {
+            downloadRate = 0
+            uploadRate = 0
+            self.previousSnapshot = snapshot
+            return
+        }
+
         let downloadedBytes =
-            snapshot.receivedBytes &- previousSnapshot.receivedBytes
-        let uploadedBytes = snapshot.sentBytes &- previousSnapshot.sentBytes
+            snapshot.receivedBytes - previousSnapshot.receivedBytes
+        let uploadedBytes = snapshot.sentBytes - previousSnapshot.sentBytes
 
         downloadRate = Double(downloadedBytes) / elapsed
         uploadRate = Double(uploadedBytes) / elapsed
+        self.previousSnapshot = snapshot
     }
 
     private func formattedRate(_ bytesPerSecond: Double) -> String {
-        let bytes = Int64(bytesPerSecond.rounded())
+        let bytes = safeByteCount(bytesPerSecond)
         return
             "\(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .binary))/s"
     }
@@ -93,7 +104,7 @@ final class NetworkBandwidthMonitor {
         formatter.isAdaptive = true
         formatter.zeroPadsFractionDigits = false
 
-        let bytes = max(Int64(bytesPerSecond.rounded()), 0)
+        let bytes = safeByteCount(bytesPerSecond)
 
         if bytes < 1024 {
             return "0K"
@@ -103,6 +114,11 @@ final class NetworkBandwidthMonitor {
             of: " ",
             with: ""
         )
+    }
+
+    private func safeByteCount(_ bytesPerSecond: Double) -> Int64 {
+        let clampedValue = min(max(bytesPerSecond.rounded(), 0), Double(Int64.max))
+        return Int64(clampedValue)
     }
 }
 
