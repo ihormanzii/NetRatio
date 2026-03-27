@@ -19,6 +19,8 @@ final class NetworkBandwidthMonitor {
 
     var downloadRate: Double = 0
     var uploadRate: Double = 0
+    var totalDownloadedBytes: UInt64 = 0
+    var totalUploadedBytes: UInt64 = 0
 
     var downloadRateDescription: String {
         formattedRate(downloadRate)
@@ -34,6 +36,14 @@ final class NetworkBandwidthMonitor {
 
     var uploadRateCompact: String {
         formattedCompactRate(uploadRate)
+    }
+
+    var totalDownloadedDescription: String {
+        formattedByteCount(totalDownloadedBytes)
+    }
+
+    var totalUploadedDescription: String {
+        formattedByteCount(totalUploadedBytes)
     }
 
     init() {
@@ -87,6 +97,8 @@ final class NetworkBandwidthMonitor {
 
         downloadRate = Double(downloadedBytes) / elapsed
         uploadRate = Double(uploadedBytes) / elapsed
+        totalDownloadedBytes += downloadedBytes
+        totalUploadedBytes += uploadedBytes
         self.previousSnapshot = snapshot
     }
 
@@ -113,6 +125,14 @@ final class NetworkBandwidthMonitor {
         return formatter.string(fromByteCount: bytes).replacingOccurrences(
             of: " ",
             with: ""
+        )
+    }
+
+    private func formattedByteCount(_ bytes: UInt64) -> String {
+        let clampedBytes = min(bytes, UInt64(Int64.max))
+        return ByteCountFormatter.string(
+            fromByteCount: Int64(clampedBytes),
+            countStyle: .binary
         )
     }
 
