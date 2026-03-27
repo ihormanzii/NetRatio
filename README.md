@@ -4,7 +4,7 @@ NetRatio is a lightweight macOS menu bar app that shows current network download
 
 It runs as a menu bar utility instead of a regular Dock app. The menu bar label updates continuously with live transfer rates, and clicking it opens a compact popover with current network stats and an About screen.
 
-![screenshot.png](files/screenshot.png)
+![screenshot_with_statistic_since_launch.png](files/screenshot_with_statistic_since_launch.png)
 
 ## Features
 
